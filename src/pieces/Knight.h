@@ -24,6 +24,9 @@ public:
     std::vector<Square *>* getLegalMoves() override;
     void updateLegalMoves(bool checkForCheck) override;
 
+    std::vector<MoveUpdater*>* getUpdates() override;
+    void setUpdate(std::vector<MoveUpdater*>& updates) override;
+
     std::string shortName() override {return "N";}
 
 private:
@@ -34,5 +37,6 @@ private:
     bool moved = false;
 
     std::vector<Square*> legalMoves;
+    std::vector<MoveUpdater*> updates;
 };
 #endif //KNIGHT_H

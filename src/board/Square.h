@@ -5,9 +5,8 @@
 #ifndef SQUARE_H
 #define SQUARE_H
 #include <vector>
-
 #include "../misc/Color.h"
-
+#include "../pieces/MoveUpdater.h"
 
 class Piece;
 
@@ -21,15 +20,13 @@ public:
     [[nodiscard]] Piece* getPiece() const;
     [[nodiscard]] bool hasPiece() const;
     [[nodiscard]] std::vector<Piece*>* getAttackingPieces();
-    [[nodiscard]] std::vector<Piece*>* getSecondaryAttackingPieces();
     void setPiece(Piece* piece);
     void removePiece();
 
     void addAttackingPiece(Piece* piece);
     void removeAttackingPiece(const Piece* piece);
 
-    void addSecondaryAttackingPiece(Piece* piece);
-    void removeSecondaryAttackingPiece(const Piece* piece);
+    MoveUpdater* getUpdater() const;
 
     void print() const;
 
@@ -38,8 +35,8 @@ private:
     int col;
     Color color;
     Piece* piece;
+    MoveUpdater* updater = new MoveUpdater();
     std::vector<Piece*> attackingPieces;
-    std::vector<Piece*> secondaryAttackingPieces;
 };
 
 #endif // SQUARE_H

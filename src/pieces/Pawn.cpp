@@ -28,20 +28,17 @@ bool Pawn::hasMoved() {
 }
 
 void Pawn::move(Square* square, bool realMove) {
-    moved = realMove ? true : moved;
-
     this->square->removePiece();
-    for (const auto attacking_piece : *this->square->getAttackingPieces()) {
-        attacking_piece->updateLegalMoves(true);
-    }
 
+    Square* oldSquare = this->square;
     square->setPiece(this);
     this->square = square;
-    for (const auto attacking_piece : *square->getAttackingPieces()) {
-        attacking_piece->updateLegalMoves(true);
-    }
+
+    MoveUpdater::updateAll(oldSquare, this);
 
     updateLegalMoves(true);
+
+    moved = realMove ? true : moved;
 }
 
 void Pawn::setLegalMoves(std::vector<Square *> moves) {
@@ -64,6 +61,7 @@ void Pawn::updateLegalMoves(bool checkForCheck) {
     Pair forwardPosition = BoardManager::getPositionByOffset({square->getRow(), square->getColumn()}, forwardOffset);
     if (BoardManager::isOnBoard(forwardPosition)) {
         Square* forwardSquare = BoardManager::getSquare(forwardPosition);
+        forwardSquare->addAttackingPiece(this);
         if (!forwardSquare->hasPiece()) {
             potentialMoves.push_back(forwardSquare);
         }
@@ -75,7 +73,8 @@ void Pawn::updateLegalMoves(bool checkForCheck) {
         Pair doubleForwardPosition = BoardManager::getPositionByOffset({square->getRow(), square->getColumn()}, doubleForwardOffset);
         if (BoardManager::isOnBoard(doubleForwardPosition)) {
             Square* doubleForwardSquare = BoardManager::getSquare(doubleForwardPosition);
-            if (!doubleForwardSquare->hasPiece()) {
+            doubleForwardSquare->addAttackingPiece(this);
+            if (!doubleForwardSquare->hasPiece() && !potentialMoves.empty()) {
                 potentialMoves.push_back(doubleForwardSquare);
             }
         }
@@ -87,6 +86,7 @@ void Pawn::updateLegalMoves(bool checkForCheck) {
         Pair capturePosition = BoardManager::getPositionByOffset({square->getRow(), square->getColumn()}, offset);
         if (BoardManager::isOnBoard(capturePosition)) {
             Square* captureSquare = BoardManager::getSquare(capturePosition);
+            captureSquare->addAttackingPiece(this);
             if (captureSquare->hasPiece() && captureSquare->getPiece()->getColor() != color) {
                 potentialMoves.push_back(captureSquare);
             }
@@ -98,4 +98,13 @@ void Pawn::updateLegalMoves(bool checkForCheck) {
     for (auto legal_move : legalMoves) {
         legal_move->addAttackingPiece(this);
     }
+    MoveUpdater::update(this, &potentialMoves);
+}
+
+std::vector<MoveUpdater *> * Pawn::getUpdates() {
+    return &updates;
+}
+
+void Pawn::setUpdate(std::vector<MoveUpdater*>& updates) {
+    this->updates = std::move(updates);
 }

@@ -25,12 +25,15 @@ public:
     std::vector<Square *>* getLegalMoves() override;
     void updateLegalMoves(bool checkForCheck) override;
 
+    std::vector<MoveUpdater*>* getUpdates() override;
+    void setUpdate(std::vector<MoveUpdater*>& updates) override;
+
     void updatePinnedPairs();
     std::unordered_map<Piece*, Piece*>* getPinnedPairs();
     bool isPinned(Piece* piece) const;
     Piece* getPinningPiece(Piece* piece) const;
 
-    std::string shortName() override {return "K";};
+    std::string shortName() override {return "K";}
 
 private:
     PieceType type;
@@ -41,6 +44,7 @@ private:
 
     std::vector<Square*> legalMoves;
     std::unordered_map<Piece*, Piece*> pinnedPairs;
+    std::vector<MoveUpdater*> updates;
 };
 
 #endif //KING_H

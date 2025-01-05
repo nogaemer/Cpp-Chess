@@ -30,15 +30,12 @@ bool Bishop::hasMoved() {
 
 void Bishop::move(Square* square, bool realMove) {
     this->square->removePiece();
-    for (const auto attacking_piece : *this->square->getAttackingPieces()) {
-        attacking_piece->updateLegalMoves(true);
-    }
 
+    Square* oldSquare = this->square;
     square->setPiece(this);
     this->square = square;
-    for (const auto attacking_piece : *square->getAttackingPieces()) {
-        attacking_piece->updateLegalMoves(true);
-    }
+
+    MoveUpdater::updateAll(oldSquare, this);
 
     updateLegalMoves(true);
 
@@ -82,4 +79,13 @@ void Bishop::updateLegalMoves(bool checkForCheck) {
     for (auto legal_move : legalMoves) {
         legal_move->addAttackingPiece(this);
     }
+    MoveUpdater::update(this, &potentialMoves);
+}
+
+std::vector<MoveUpdater *> * Bishop::getUpdates() {
+    return &updates;
+}
+
+void Bishop::setUpdate(std::vector<MoveUpdater*>& updates) {
+    this->updates = std::move(updates);
 }

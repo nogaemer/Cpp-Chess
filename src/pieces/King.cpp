@@ -30,17 +30,14 @@ bool King::hasMoved() {
 
 void King::move(Square* square, const bool realMove) {
     this->square->removePiece();
-    for (const auto attacking_piece : *this->square->getAttackingPieces()) {
-        attacking_piece->updateLegalMoves(true);
-    }
 
+    Square* oldSquare = this->square;
     square->setPiece(this);
     this->square = square;
-    for (const auto attacking_piece : *square->getAttackingPieces()) {
-        attacking_piece->updateLegalMoves(true);
-    }
 
-    updateLegalMoves(true);
+    MoveUpdater::updateAll(oldSquare, this);
+
+    updateLegalMoves(false);
 
     moved = realMove ? true : moved;
 }
@@ -61,12 +58,22 @@ void King::updateLegalMoves(bool checkForCheck) {
 
     std::vector<Pair> moves = {{1, 0}, {1, 1}, {1, -1}, {0, 1}, {0, -1}, {-1, 0}, {-1, 1}, {-1, -1}};
 
-    auto squares = BoardManager::getSquaresByOffset(this, moves);
-    setLegalMoves(BoardManager::validateMoves(this, squares, color, checkForCheck));
+    auto potentialMoves = BoardManager::getSquaresByOffset(this, moves);
+    setLegalMoves(BoardManager::validateMoves(this, potentialMoves, color, checkForCheck));
 
-    for (auto legal_move : legalMoves) {
-        legal_move->addAttackingPiece(this);
+    for (const auto move : potentialMoves) {
+        move->addAttackingPiece(this);
     }
+
+    MoveUpdater::update(this, &potentialMoves);
+}
+
+std::vector<MoveUpdater *> * King::getUpdates() {
+    return &updates;
+}
+
+void King::setUpdate(std::vector<MoveUpdater*>& updates) {
+    this->updates = std::move(updates);
 }
 
 void King::updatePinnedPairs() {

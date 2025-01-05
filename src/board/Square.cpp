@@ -39,15 +39,18 @@ void Square::removePiece() {
     piece = nullptr;
 }
 
+MoveUpdater * Square::getUpdater() const {
+    return updater;
+}
+
 std::vector<Piece *> * Square::getAttackingPieces() {
     return &attackingPieces;
 }
 
-std::vector<Piece *> * Square::getSecondaryAttackingPieces() {
-    return &secondaryAttackingPieces;
-}
-
 void Square::addAttackingPiece(Piece* piece) {
+    if (std::ranges::find(attackingPieces, piece) != attackingPieces.end()) {
+        throw std::runtime_error("Piece already attacking square");
+    }
     attackingPieces.push_back(piece);
 }
 
@@ -55,17 +58,6 @@ void Square::removeAttackingPiece(const Piece* piece) {
     auto it = std::ranges::find(attackingPieces, piece);
     if (it != attackingPieces.end()) {
         attackingPieces.erase(it);
-    }
-}
-
-void Square::addSecondaryAttackingPiece(Piece *piece) {
-    secondaryAttackingPieces.push_back(piece);
-}
-
-void Square::removeSecondaryAttackingPiece(const Piece *piece) {
-    auto it = std::ranges::find(secondaryAttackingPieces, piece);
-    if (it != secondaryAttackingPieces.end()) {
-        secondaryAttackingPieces.erase(it);
     }
 }
 

@@ -41,11 +41,15 @@ void Display::start() {
                     case 75: // Left arrow key
                         if (xCursorPosition > 0) {
                             xCursorPosition--;
+                        } else if (pieceSelected) {
+                            xCursorPosition = maxXCursorPosition - 1;
                         }
                     break;
                     case 77: // Right arrow key
                         if (xCursorPosition < maxXCursorPosition - 1) {
                             xCursorPosition++;
+                        } else if (pieceSelected) {
+                            xCursorPosition = 0;
                         }
                     break;
                     case 72: // Up arrow key
@@ -64,11 +68,12 @@ void Display::start() {
                 }
             } else if (ch == 13) { // Enter key
                 if (pieceSelected) {
-                    selectedPiece->move(selectedPiece->getLegalMoves()->at(*selectedMove), true);
+                    Square* moveToSquare = selectedPiece->getLegalMoves()->at(*selectedMove);
+                    selectedPiece->move(moveToSquare, true);
 
                     pieceSelected = false;
-                    xCursorPosition = 0;
-                    yCursorPosition = 0;
+                    xCursorPosition = moveToSquare->getColumn();
+                    yCursorPosition = moveToSquare->getRow();
                     maxXCursorPosition = 8;
                 } else {
                     const Square* square = BoardManager::getSquare({yCursorPosition, xCursorPosition});
@@ -81,8 +86,8 @@ void Display::start() {
                 }
             } else if (ch == 27) { // Escape key
                 pieceSelected = false;
-                xCursorPosition = 0;
-                yCursorPosition = 0;
+                xCursorPosition = selectedPiece->getSquare()->getColumn();
+                yCursorPosition = selectedPiece->getSquare()->getRow();
                 maxXCursorPosition = 8;
             }
             drawBoard();
@@ -127,12 +132,12 @@ void Display::drawBoard() const {
                 }
 
                 if (isLegalMoveSquare) {
-                    bg = RGB{255,214,209};
+                    bg = RGB{255,116,108};
                     fg = RGB{0, 0, 0};
                 }
 
                 if (this->selectedPiece->getLegalMoves()->at(*selectedMove) == square) {
-                    bg = RGB{255,116,108};
+                    bg = RGB{192,70,87};
                     fg = RGB{0, 0, 0};
                 }
             } else {

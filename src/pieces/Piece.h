@@ -6,8 +6,9 @@
 #define PIECE_H
 #include <vector>
 #include "../board/Square.h"
+#include <string>
 
-class Square;
+class MoveUpdater;
 
 enum class PieceType {
     PAWN,
@@ -32,6 +33,9 @@ public:
     virtual void setLegalMoves(std::vector<Square*> moves) = 0;
     virtual std::vector<Square *>* getLegalMoves() = 0;
     virtual void updateLegalMoves(bool checkForCheck) = 0;
+
+    virtual std::vector<MoveUpdater*>* getUpdates() = 0;
+    virtual void setUpdate(std::vector<MoveUpdater*>& updates) = 0;
 
     virtual std::string shortName() = 0;
 };

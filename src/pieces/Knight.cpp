@@ -30,15 +30,12 @@ bool Knight::hasMoved() {
 
 void Knight::move(Square* square, const bool realMove) {
     this->square->removePiece();
-    for (const auto attacking_piece : *this->square->getAttackingPieces()) {
-        attacking_piece->updateLegalMoves(true);
-    }
 
+    Square* oldSquare = this->square;
     square->setPiece(this);
     this->square = square;
-    for (const auto attacking_piece : *square->getAttackingPieces()) {
-        attacking_piece->updateLegalMoves(true);
-    }
+
+    MoveUpdater::updateAll(oldSquare, this);
 
     updateLegalMoves(true);
 
@@ -61,10 +58,19 @@ void Knight::updateLegalMoves(bool checkForCheck) {
 
     std::vector<Pair> moves = {{2, 1}, {2, -1}, {-2, 1}, {-2, -1}, {1, 2}, {1, -2}, {-1, 2}, {-1, -2}};
 
-    auto squares = BoardManager::getSquaresByOffset(this, moves);
-    setLegalMoves(BoardManager::validateMoves(this, squares, color, checkForCheck));
+    auto potentialMoves = BoardManager::getSquaresByOffset(this, moves);
+    setLegalMoves(BoardManager::validateMoves(this, potentialMoves, color, checkForCheck));
 
-    for (auto legal_move : legalMoves) {
-        legal_move->addAttackingPiece(this);
+    for (const auto move : potentialMoves) {
+        move->addAttackingPiece(this);
     }
+    MoveUpdater::update(this, &potentialMoves);
+}
+
+std::vector<MoveUpdater *> * Knight::getUpdates() {
+    return &updates;
+}
+
+void Knight::setUpdate(std::vector<MoveUpdater*>& updates) {
+    this->updates = std::move(updates);
 }

@@ -7,14 +7,16 @@
 
 #include <unordered_map>
 #include <memory> // For std::unique_ptr
+#include <vector>
 
 #include "../misc/Color.h"
-#include "../pieces/Piece.h"
 #include "../misc/Pair.h"
 
 class King;
 class Square;
 class Piece;
+enum class PieceType;
+
 
 class BoardManager {
 public:
@@ -31,6 +33,8 @@ public:
 
     static King* getKing(Color color);
 
+    static bool doesMoveRemoveCheck(Piece * piece, Square * square, King * king, Color color);
+
     static std::vector<Square*> validateMoves(Piece* piece, std::vector<Square*>& moves, Color color, bool checkForCheck);
     static std::pair<Piece*, Piece*> checkForPinedPiece(const std::vector<Square*>& squares, Color color);
 
@@ -39,6 +43,10 @@ public:
     static std::vector<Square*> getDiagonalSquares(Piece* piece, bool up, bool right);
     static std::vector<Square*> getStraightSquares(Piece* piece, bool positivDirecion, bool vertical);
 
+    static std::vector<Piece*> getWhitePieces();
+    static std::vector<Piece*> getBlackPieces();
+
+    static void removePiece(Piece *piece);
 
 private:
     static King* whiteKing;

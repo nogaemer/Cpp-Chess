@@ -30,6 +30,10 @@ bool King::hasMoved() {
 
 void King::move(Square* square, const bool realMove) {
     this->square->removePiece();
+    if (square->getPiece() != nullptr) {
+        square->getPiece()->deletePiece();
+    }
+
 
     Square* oldSquare = this->square;
     square->setPiece(this);
@@ -61,7 +65,7 @@ void King::updateLegalMoves(bool checkForCheck) {
     auto potentialMoves = BoardManager::getSquaresByOffset(this, moves);
     setLegalMoves(BoardManager::validateMoves(this, potentialMoves, color, checkForCheck));
 
-    for (const auto move : potentialMoves) {
+    for (const auto move : legalMoves) {
         move->addAttackingPiece(this);
     }
 

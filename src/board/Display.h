@@ -10,17 +10,17 @@
 
 #include "Square.h"
 #include "../misc/Pair.h"
+#include "../pieces/Piece.h"
 
 struct RGB;
-class Piece;
 
 class Display {
 public:
     void start();
 private:
 
-    int xCursorPosition = 0;
-    int yCursorPosition = 0;
+    int xCursorPosition = 5;
+    int yCursorPosition = 6;
     bool pieceSelected = false;
     int* selectedMove = &xCursorPosition;
     Piece* selectedPiece = nullptr;

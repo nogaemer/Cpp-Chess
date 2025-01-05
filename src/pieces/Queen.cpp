@@ -29,6 +29,10 @@ bool Queen::hasMoved() {
 
 void Queen::move(Square* square, bool realMove) {
     this->square->removePiece();
+    if (square->getPiece() != nullptr) {
+        square->getPiece()->deletePiece();
+    }
+
 
     Square* oldSquare = this->square;
     square->setPiece(this);

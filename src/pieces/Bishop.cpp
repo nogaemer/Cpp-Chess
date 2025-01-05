@@ -30,6 +30,9 @@ bool Bishop::hasMoved() {
 
 void Bishop::move(Square* square, bool realMove) {
     this->square->removePiece();
+    if (square->getPiece() != nullptr) {
+        square->getPiece()->deletePiece();
+    }
 
     Square* oldSquare = this->square;
     square->setPiece(this);

@@ -4,11 +4,13 @@
 
 #ifndef PIECE_H
 #define PIECE_H
+#include <iostream>
 #include <vector>
 #include "../board/Square.h"
 #include <string>
 
 class MoveUpdater;
+class BoardManager;
 
 enum class PieceType {
     PAWN,
@@ -29,15 +31,21 @@ public:
 
     virtual bool hasMoved() = 0;
     virtual void move(Square* square, bool realMove) = 0;
+    void deletePiece();
 
     virtual void setLegalMoves(std::vector<Square*> moves) = 0;
     virtual std::vector<Square *>* getLegalMoves() = 0;
     virtual void updateLegalMoves(bool checkForCheck) = 0;
 
+
     virtual std::vector<MoveUpdater*>* getUpdates() = 0;
     virtual void setUpdate(std::vector<MoveUpdater*>& updates) = 0;
 
     virtual std::string shortName() = 0;
+
+    std::string asString() {
+        return "Piece: " + shortName() + " Color: " + (getColor() == Color::WHITE ? "White" : "Black") + " Address: " + std::to_string(reinterpret_cast<uintptr_t>(this));
+    }
 };
 
 #endif //PIECE_H

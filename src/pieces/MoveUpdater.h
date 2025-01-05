@@ -6,8 +6,6 @@
 #define MOVE_UPDATER_H
 #include <vector>
 
-#include "../board/Display.h"
-
 class Piece;
 class Square;
 

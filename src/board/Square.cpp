@@ -6,10 +6,12 @@
 #include <iostream>
 #include <algorithm>
 
+#include "BoardManager.h"
+#include "../pieces/King.h"
 #include "../pieces/Piece.h"
 
 Square::Square(const int row, const int col, Piece* piece, const Color color
-    ): row(row), col(col), color(color), piece(piece) {}
+    ): row(row), col(col), color(color), piece(piece), updater(new MoveUpdater) {}
 
 int Square::getRow() const {
     return row;
@@ -44,20 +46,66 @@ MoveUpdater * Square::getUpdater() const {
 }
 
 std::vector<Piece *> * Square::getAttackingPieces() {
-    return &attackingPieces;
+    std::vector<Piece*>* combinedAttackingPieces = new std::vector<Piece*>();
+    combinedAttackingPieces->insert(combinedAttackingPieces->end(), whiteAttackingPieces.begin(), whiteAttackingPieces.end());
+    combinedAttackingPieces->insert(combinedAttackingPieces->end(), blackAttackingPieces.begin(), blackAttackingPieces.end());
+    return combinedAttackingPieces;
+}
+
+std::vector<Piece *> * Square::getAttackingPieces(const Color color) {
+    if (color == WHITE) {
+        return &whiteAttackingPieces;
+    } else {
+        return &blackAttackingPieces;
+    }
 }
 
 void Square::addAttackingPiece(Piece* piece) {
-    if (std::ranges::find(attackingPieces, piece) != attackingPieces.end()) {
+    std::vector<Piece*>* attackingPieces = piece->getColor() == WHITE ? &whiteAttackingPieces : &blackAttackingPieces;
+
+    if (std::ranges::find(*attackingPieces, piece) != attackingPieces->end()) {
         throw std::runtime_error("Piece already attacking square");
     }
-    attackingPieces.push_back(piece);
+
+    attackingPieces->push_back(piece);
+
+    if (this->piece != nullptr && this->piece->getType() == PieceType::KING) {
+
+        std::vector<Piece*> coloredPieces;
+        if (piece->getColor() != WHITE) {
+            coloredPieces = BoardManager::getWhitePieces();
+            BoardManager::getKing(WHITE)->updateLegalMoves(false);
+        } else {
+            coloredPieces = BoardManager::getBlackPieces();
+            BoardManager::getKing(WHITE)->updateLegalMoves(false);
+        }
+        for (const auto coloredPiece : coloredPieces) {
+            coloredPiece->updateLegalMoves(true);
+        }
+    }
 }
 
-void Square::removeAttackingPiece(const Piece* piece) {
-    auto it = std::ranges::find(attackingPieces, piece);
-    if (it != attackingPieces.end()) {
-        attackingPieces.erase(it);
+void Square::removeAttackingPiece(Piece* piece) {
+    std::vector<Piece*>* attackingPieces = piece->getColor() == WHITE ? &whiteAttackingPieces : &blackAttackingPieces;
+
+    auto it = std::ranges::find(*attackingPieces, piece);
+    if (it != attackingPieces->end()) {
+        attackingPieces->erase(it);
+    }
+
+    if (this->piece != nullptr && this->piece->getType() == PieceType::KING) {
+
+        std::vector<Piece*> coloredPieces;
+        if (piece->getColor() != WHITE) {
+            coloredPieces = BoardManager::getWhitePieces();
+            BoardManager::getKing(WHITE)->updateLegalMoves(false);
+        } else {
+            coloredPieces = BoardManager::getBlackPieces();
+            BoardManager::getKing(WHITE)->updateLegalMoves(false);
+        }
+        for (const auto coloredPiece : coloredPieces) {
+            coloredPiece->updateLegalMoves(true);
+        }
     }
 }
 

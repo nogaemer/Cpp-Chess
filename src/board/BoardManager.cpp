@@ -43,20 +43,21 @@ void BoardManager::createChessBoard() {
     whitePieces.push_back(std::make_unique<Bishop>(PieceType::BISHOP, WHITE, getSquare({0, 2})));
     whitePieces.push_back(std::make_unique<Bishop>(PieceType::BISHOP, WHITE, getSquare({0, 5})));
     whitePieces.push_back(std::make_unique<Knight>(PieceType::KNIGHT, WHITE, getSquare({0, 6})));
-    whitePieces.push_back(std::make_unique<Rook>(PieceType::ROOK, WHITE, getSquare({0, 7})));
+    whitePieces.push_back(std::make_unique<Rook>(PieceType::ROOK, WHITE, getSquare({6, 5})));
     whitePieces.push_back(std::make_unique<Queen>(PieceType::QUEEN, WHITE, getSquare({0, 3})));
     for (int i = 0; i < 8; i++) {
+        if (i == 5) continue;
         whitePieces.push_back(std::make_unique<Pawn>(PieceType::PAWN, WHITE, getSquare({1, i})));
     }
 
     blackPieces.push_back(std::make_unique<Rook>(PieceType::ROOK, BLACK, getSquare({7, 0})));
     blackPieces.push_back(std::make_unique<Knight>(PieceType::KNIGHT, BLACK, getSquare({7, 1})));
     blackPieces.push_back(std::make_unique<Bishop>(PieceType::BISHOP, BLACK, getSquare({7, 2})));
-    blackPieces.push_back(std::make_unique<Bishop>(PieceType::BISHOP, BLACK, getSquare({7, 5})));
     blackPieces.push_back(std::make_unique<Knight>(PieceType::KNIGHT, BLACK, getSquare({7, 6})));
     blackPieces.push_back(std::make_unique<Rook>(PieceType::ROOK, BLACK, getSquare({7, 7})));
     blackPieces.push_back(std::make_unique<Queen>(PieceType::QUEEN, BLACK, getSquare({7, 3})));
     for (int i = 0; i < 8; i++) {
+        if (i > 4) continue;
         blackPieces.push_back(std::make_unique<Pawn>(PieceType::PAWN, BLACK, getSquare({6, i})));
     }
 
@@ -123,14 +124,37 @@ King* BoardManager::getKing(const Color color) {
     return color == WHITE ? whiteKing : blackKing;
 }
 
+bool BoardManager::doesMoveRemoveCheck(Piece *piece, Square *square, King *king, Color color) {
+    std::vector<Piece*>* attackingPieces = king->getSquare()->getAttackingPieces(color == WHITE ? BLACK : WHITE);
+
+    if (piece->getType() == PieceType::KING) {
+        if (square->getAttackingPieces()->empty()) {
+            return true;
+        }
+        return false;
+    }
+
+    if (attackingPieces->size() > 1) {
+        return false;
+    }
+
+    if (attackingPieces->at(0)->getSquare() == square) {
+        return true;
+    }
+
+    if (areCollinear(attackingPieces->at(0), square, king) &&
+        isAttackingPieceInMiddleOfKingAndPinnedPiece(attackingPieces->at(0), square, king)) {
+        return true;
+    }
+    return false;
+}
+
 std::vector<Square*> BoardManager::validateMoves(Piece* piece, std::vector<Square*> &squares, Color color, bool checkForCheck) {
     std::vector<Square*> movableSquares {};
     King* king = getKing(color);
 
-    // If the king is in check, the only legal moves are those that move the king
-    if (!king->getSquare()->getAttackingPieces()->empty()) return movableSquares;
-
     for (auto& square : squares) {
+
         //Check if the square is occupied by a piece of the same color
         if (square == nullptr) continue;
         if (square->hasPiece() && square->getPiece()->getColor() == color) continue;
@@ -141,32 +165,16 @@ std::vector<Square*> BoardManager::validateMoves(Piece* piece, std::vector<Squar
             if (isMovePuttingKingInCheck(piece, square, king)) continue;
         }
 
+        if (!king->getSquare()->getAttackingPieces()->empty() && !doesMoveRemoveCheck(piece, square, king, color)) {
+            continue;
+        }
+
         movableSquares.push_back(square);
     }
     return movableSquares;
 }
 
 bool BoardManager::isMovePuttingKingInCheck(Piece* piece, Square* square, King* king) {
-    // Save the original moves of the pinning piece
-    // Square* originalSquare = piece->getSquare();
-    // std::vector<Square *> originalMoves = {};
-    //
-    // piece->move(square, false);
-    //
-    // // Get the pinning piece and update its legal moves
-    // Piece* attackingPiece = king->getPinningPiece(piece);
-    // originalMoves = *attackingPiece->getLegalMoves();
-    // Square* attackingSquare = attackingPiece->getSquare();
-    // attackingPiece->updateLegalMoves(false);
-    //
-    // // Check if the king is in check
-    // bool isCheck = std::ranges::find(*attackingPiece->getLegalMoves(), king->getSquare()) != attackingPiece->getLegalMoves()->end();
-    //
-    // // Reset the original moves of the pinning piece
-    // piece->move(originalSquare, false);
-    // attackingPiece->setLegalMoves(originalMoves);
-    // attackingPiece->move(attackingSquare, false);
-
     Piece *attackingPiece = king->getPinningPiece(piece);
 
     if (attackingPiece == nullptr) return true;
@@ -189,9 +197,7 @@ bool BoardManager::isAttackingPieceInMiddleOfKingAndPinnedPiece(Piece* piece, Sq
     double kingToPiece = dist(king->getSquare(), piece->getSquare());
     const double epsilon = 1e-9;
 
-    return std::abs(kingToSquare + squareToPiece - kingToPiece) < epsilon ||
-           std::abs(kingToSquare + kingToPiece - squareToPiece) < epsilon ||
-           std::abs(kingToPiece + squareToPiece - kingToSquare) < epsilon;
+    return std::abs(kingToSquare + squareToPiece - kingToPiece) < epsilon;
 }
 
 bool BoardManager::areCollinear(Piece* piece, Square* square, King* king) {
@@ -227,9 +233,13 @@ checkForPinedPiece(const std::vector<Square *> &squares, const Color color) {
             return {nullptr, nullptr};
         }
 
-        pinningPiece = square->getPiece();
-        break;
+        if (square->getPiece()->getType() == PieceType::QUEEN
+            || square->getPiece()->getType() == PieceType::ROOK
+            || square->getPiece()->getType() == PieceType::BISHOP) {
 
+            pinningPiece = square->getPiece();
+        }
+        break;
     }
 
     if (pinedPiece != nullptr && pinningPiece != nullptr) {
@@ -244,9 +254,9 @@ std::vector<Square *> BoardManager::traverseSquaresUntilPiece(const std::vector<
 
     for (Square* square : squares) {
         if (square->hasPiece()) {
-            if (square->getPiece()->getColor() == color) {
-                return traversedSquares;
-            }
+            // if (square->getPiece()->getColor() == color) {
+            //     return traversedSquares;
+            // }
 
             traversedSquares.push_back(square);
             return traversedSquares;
@@ -289,6 +299,38 @@ std::vector<Square *> BoardManager::getStraightSquares(Piece* piece, bool positi
         squares.push_back(square);
     }
     return squares;
+}
+
+std::vector<Piece*> BoardManager::getWhitePieces() {
+    static std::vector<Piece*> whitePiecePtrs;
+    whitePiecePtrs.clear();
+    for (const auto& piece : whitePieces) {
+        whitePiecePtrs.push_back(piece.get());
+    }
+    return whitePiecePtrs;
+}
+
+std::vector<Piece *> BoardManager::getBlackPieces() {
+    static std::vector<Piece*> blackPiecePtrs;
+    blackPiecePtrs.clear();
+    for (const auto& piece : blackPieces) {
+        blackPiecePtrs.push_back(piece.get());
+    }
+    return blackPiecePtrs;
+}
+
+void BoardManager::removePiece(Piece* piece) {
+    if (piece->getColor() == WHITE) {
+        auto it = std::ranges::find_if(whitePieces, [piece](const std::unique_ptr<Piece>& p) { return p.get() == piece; });
+        if (it != whitePieces.end()) {
+            whitePieces.erase(it);
+        }
+    } else {
+        auto it = std::ranges::find_if(blackPieces, [piece](const std::unique_ptr<Piece>& p) { return p.get() == piece; });
+        if (it != blackPieces.end()) {
+            blackPieces.erase(it);
+        }
+    }
 }
 
 

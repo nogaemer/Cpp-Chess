@@ -10,6 +10,7 @@
 
 #include "Square.h"
 #include "BoardManager.h"
+#include "../pieces/Piece.h"
 
 struct RGB {
     int r, g, b;

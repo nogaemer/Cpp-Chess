@@ -8,6 +8,7 @@
 #include <set>
 
 #include "Piece.h"
+#include "../board/Square.h"
 
 void MoveUpdater::registerPiece(Piece *piece) {
     pieces.push_back(piece);

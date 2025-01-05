@@ -30,8 +30,17 @@ bool Knight::hasMoved() {
 
 void Knight::move(Square* square, const bool realMove) {
     this->square->removePiece();
+    for (const auto attacking_piece : *this->square->getAttackingPieces()) {
+        attacking_piece->updateLegalMoves(true);
+    }
+
     square->setPiece(this);
     this->square = square;
+    for (const auto attacking_piece : *square->getAttackingPieces()) {
+        attacking_piece->updateLegalMoves(true);
+    }
+
+    updateLegalMoves(true);
 
     moved = realMove ? true : moved;
 }
@@ -46,8 +55,16 @@ std::vector<Square *>* Knight::getLegalMoves() {
 }
 
 void Knight::updateLegalMoves(bool checkForCheck) {
+    for (auto legal_move : legalMoves) {
+        legal_move->removeAttackingPiece(this);
+    }
+
     std::vector<Pair> moves = {{2, 1}, {2, -1}, {-2, 1}, {-2, -1}, {1, 2}, {1, -2}, {-1, 2}, {-1, -2}};
 
     auto squares = BoardManager::getSquaresByOffset(this, moves);
     setLegalMoves(BoardManager::validateMoves(this, squares, color, checkForCheck));
+
+    for (auto legal_move : legalMoves) {
+        legal_move->addAttackingPiece(this);
+    }
 }

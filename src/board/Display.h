@@ -21,22 +21,22 @@ private:
 
     int xCursorPosition = 0;
     int yCursorPosition = 0;
+    bool pieceSelected = false;
+    int* selectedMove = &xCursorPosition;
+    Piece* selectedPiece = nullptr;
 
     int maxXCursorPosition = 8;
     int maxYCursorPosition = 8;
 
-    void drawBoard(Pair selectedSquare);
-    void printSquare(Square* square, Pair position,
-        bool left, bool right, bool up, bool down,
-        RGB bg, RGB fg, RGB highlight);
+    void drawBoard() const;
 
     void gotoXY(short x, short y);
 
-    void setBackgroundColor(RGB color);
-    void setForegroundColor(RGB color);
-    void resetColor();
+    static void setBackgroundColor(RGB color);
+    static void setForegroundColor(RGB color);
+    static void resetColor();
 
-    void disableCursor();
+    static void disableCursor();
 };
 
 #endif //DISPLAY_H

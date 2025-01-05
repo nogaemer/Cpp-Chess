@@ -7,8 +7,11 @@
 #include <cmath>
 #include <iostream>
 
+#include "../pieces/Bishop.h"
 #include "../pieces/King.h"
 #include "../pieces/Knight.h"
+#include "../pieces/Pawn.h"
+#include "../pieces/Queen.h"
 #include "../pieces/Rook.h"
 
 std::unordered_map<Pair, std::unique_ptr<Square>> BoardManager::board {};
@@ -33,14 +36,29 @@ void BoardManager::createChessBoard() {
 
     // Create the pieces
     whiteKing = new King(PieceType::KING, WHITE, getSquare({0, 4}));
-    blackKing = new King(PieceType::KING, BLACK, getSquare({7, 0}));
+    blackKing = new King(PieceType::KING, BLACK, getSquare({7, 4}));
 
     whitePieces.push_back(std::make_unique<Rook>(PieceType::ROOK, WHITE, getSquare({0, 0})));
     whitePieces.push_back(std::make_unique<Knight>(PieceType::KNIGHT, WHITE, getSquare({0, 1})));
+    whitePieces.push_back(std::make_unique<Bishop>(PieceType::BISHOP, WHITE, getSquare({0, 2})));
+    whitePieces.push_back(std::make_unique<Bishop>(PieceType::BISHOP, WHITE, getSquare({0, 5})));
     whitePieces.push_back(std::make_unique<Knight>(PieceType::KNIGHT, WHITE, getSquare({0, 6})));
     whitePieces.push_back(std::make_unique<Rook>(PieceType::ROOK, WHITE, getSquare({0, 7})));
+    whitePieces.push_back(std::make_unique<Queen>(PieceType::QUEEN, WHITE, getSquare({0, 3})));
+    for (int i = 0; i < 8; i++) {
+        whitePieces.push_back(std::make_unique<Pawn>(PieceType::PAWN, WHITE, getSquare({1, i})));
+    }
 
-    blackPieces.push_back(std::make_unique<Rook>(PieceType::ROOK, BLACK, getSquare({4, 0})));
+    blackPieces.push_back(std::make_unique<Rook>(PieceType::ROOK, BLACK, getSquare({7, 0})));
+    blackPieces.push_back(std::make_unique<Knight>(PieceType::KNIGHT, BLACK, getSquare({7, 1})));
+    blackPieces.push_back(std::make_unique<Bishop>(PieceType::BISHOP, BLACK, getSquare({7, 2})));
+    blackPieces.push_back(std::make_unique<Bishop>(PieceType::BISHOP, BLACK, getSquare({7, 5})));
+    blackPieces.push_back(std::make_unique<Knight>(PieceType::KNIGHT, BLACK, getSquare({7, 6})));
+    blackPieces.push_back(std::make_unique<Rook>(PieceType::ROOK, BLACK, getSquare({7, 7})));
+    blackPieces.push_back(std::make_unique<Queen>(PieceType::QUEEN, BLACK, getSquare({7, 3})));
+    for (int i = 0; i < 8; i++) {
+        blackPieces.push_back(std::make_unique<Pawn>(PieceType::PAWN, BLACK, getSquare({6, i})));
+    }
 
     whiteKing->updatePinnedPairs();
     blackKing->updatePinnedPairs();

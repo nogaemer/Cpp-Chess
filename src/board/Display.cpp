@@ -6,17 +6,30 @@
 
 #include <iostream>
 #include <conio.h>
+#include <sstream>
 
 #include "Square.h"
 #include "BoardManager.h"
 
 struct RGB {
     int r, g, b;
+
+    [[nodiscard]] std::string toForegroundColorCode() const {
+        std::ostringstream oss;
+        oss << "\033[38;2;" << r << ";" << g << ";" << b << "m";
+        return oss.str();
+    }
+
+    [[nodiscard]] std::string toBackgroundColorCode() const {
+        std::ostringstream oss;
+        oss << "\033[48;2;" << r << ";" << g << ";" << b << "m";
+        return oss.str();
+    }
 };
 
 void Display::start() {
     disableCursor();
-    drawBoard({0, 0});
+    drawBoard();
 
     while (true) {
         gotoXY(0, 0);
@@ -41,103 +54,121 @@ void Display::start() {
                         }
                     break;
                     case 80: // Down arrow key
+                        if (pieceSelected) break;
+
                         if (yCursorPosition < maxYCursorPosition - 1) {
                             yCursorPosition++;
                         }
                     break;
                     default: break;
                 }
-                drawBoard({yCursorPosition, xCursorPosition});
+            } else if (ch == 13) { // Enter key
+                if (pieceSelected) {
+                    selectedPiece->move(selectedPiece->getLegalMoves()->at(*selectedMove), true);
+
+                    pieceSelected = false;
+                    xCursorPosition = 0;
+                    yCursorPosition = 0;
+                    maxXCursorPosition = 8;
+                } else {
+                    const Square* square = BoardManager::getSquare({yCursorPosition, xCursorPosition});
+                    if (square->hasPiece()) {
+                        pieceSelected = true;
+                        selectedPiece = square->getPiece();
+                        xCursorPosition = 0;
+                        maxXCursorPosition = selectedPiece->getLegalMoves()->size();
+                    }
+                }
+            } else if (ch == 27) { // Escape key
+                pieceSelected = false;
+                xCursorPosition = 0;
+                yCursorPosition = 0;
+                maxXCursorPosition = 8;
             }
+            drawBoard();
         }
     }
 }
 
-void Display::drawBoard(Pair selectedSquare) {
-    Piece* selectedPiece = BoardManager::getSquare(selectedSquare)->getPiece();
+void Display::drawBoard() const {
+    Piece* selectedPiece;
+    if (pieceSelected) {
+        selectedPiece = this->selectedPiece;
+    } else {
+        selectedPiece = BoardManager::getSquare({yCursorPosition, xCursorPosition})->getPiece();
+    }
 
     std::vector<Square*> legalMoveSquares = selectedPiece != nullptr ? *selectedPiece->getLegalMoves() : std::vector<Square*>{};
 
-    gotoXY(0,0);
-    disableCursor();
+    RGB bg;
+    RGB fg;
+    constexpr auto highlight = RGB{255, 255, 255};
+    std::string clearColors = "\033[0m";
+
+    std::ostringstream boardStream;
+    boardStream << clearColors << "\n\n"; // Reset colors
 
     for (int row = 0; row < 8; row++) {
-        gotoXY(0, row * 2 + 3);
-        std::cout << 8 - row << " ";
+        boardStream << "  +---+---+---+---+---+---+---+---+\n";
+        boardStream << 8 - row << " |";
         for (int column = 0; column < 8; column++) {
             Square* square = BoardManager::getSquare({row, column});
             bool isLegalMoveSquare = std::ranges::find(legalMoveSquares, square) != legalMoveSquares.end();
 
-            RGB bg = square->getColor() == WHITE ? RGB{98,88,81} : RGB{46,43,41};
-            RGB fg = square->getColor() == WHITE ? RGB{240,240,240} : RGB{224,219,215};
-            RGB highlight = RGB{255, 255, 255};
+            bg = square->getColor() == WHITE ? RGB{98,88,81} : RGB{46,43,41};
+            fg = square->getColor() == WHITE ? RGB{240,240,240} : RGB{224,219,215};
 
-            if (isLegalMoveSquare) {
-                bg = RGB{186,255,201};
-                fg = RGB{0, 0, 0};
+
+
+            if (pieceSelected) {
+                if (this->selectedPiece->getSquare() == square) {
+                    bg = RGB{0,187,119};
+                    fg = RGB{0, 0, 0};
+                }
+
+                if (isLegalMoveSquare) {
+                    bg = RGB{255,214,209};
+                    fg = RGB{0, 0, 0};
+                }
+
+                if (this->selectedPiece->getLegalMoves()->at(*selectedMove) == square) {
+                    bg = RGB{255,116,108};
+                    fg = RGB{0, 0, 0};
+                }
+            } else {
+                if (isLegalMoveSquare) {
+                    bg = RGB{255,116,108};
+                    fg = RGB{0, 0, 0};
+                }
+
+                if (row == yCursorPosition && column == xCursorPosition) {
+                    bg = RGB{128,239,128};
+                    fg = RGB{0, 0, 0};
+                }
             }
 
-            if (row == selectedSquare.row && column == selectedSquare.column) {
-                bg = RGB{128,239,128};
-                fg = RGB{0, 0, 0};
+            boardStream << bg.toBackgroundColorCode();
+            boardStream << fg.toForegroundColorCode();
+
+            if (square->hasPiece()) {
+                if (square->getPiece()->getColor() == WHITE) {
+                    boardStream << " W" << square->getPiece()->shortName();
+                } else {
+                    boardStream << " B" << square->getPiece()->shortName();
+                }
+            } else {
+                boardStream << "   ";
             }
 
-            printSquare(square, {row, column},
-                true, column == 7, true, row == 7,
-                bg, fg, highlight);
+            boardStream << clearColors;
+            boardStream << highlight.toForegroundColorCode();
+            boardStream << "|";
         }
+        boardStream << "\n";
     }
-    std::cout << "    a   b   c   d   e   f   g   h" << std::endl;
-}
-
-void Display::printSquare(Square* square, Pair position,
-    bool left, bool right, bool up, bool down,
-    RGB bg, RGB fg, RGB highlight) {
-
-    constexpr int xMultiplier = 4;
-    constexpr int yMultiplier = 2;
-    constexpr int xPadding = 2;
-    constexpr int yPadding = 2;
-
-    const auto x = static_cast<short>(position.column * xMultiplier + xPadding);
-    auto y = static_cast<short>(position.row * yMultiplier  + yPadding);
-    gotoXY(x, y);
-
-    setForegroundColor(highlight);
-    if (left && up) std::cout << "+";
-    if (up) std::cout << "---";
-    if (right && up) std::cout << "+";
-
-    gotoXY(static_cast<short>(position.column * xMultiplier + xPadding),
-        static_cast<short>(position.row * yMultiplier) + yPadding + 1);
-    if (left) std::cout << "|";
-
-    setBackgroundColor(bg);
-    setForegroundColor(fg);
-
-    if (square->hasPiece()) {
-        if (square->getPiece()->getColor() == WHITE) {
-            std::cout << " W" << square->getPiece()->shortName();
-        } else {
-            std::cout << " B" << square->getPiece()->shortName();
-        }
-    } else {
-        std::cout << "   ";
-    }
-
-    setForegroundColor(highlight);
-    if (right) std::cout << "|";
-
-    gotoXY(static_cast<short>(position.column * xMultiplier + xPadding),
-        static_cast<short>(position.row * yMultiplier + yPadding + 2));
-
-    resetColor();
-    setForegroundColor(highlight);
-
-    if (left && down) std::cout << "+";
-    if (down) std::cout << "---";
-    if (right && down) std::cout << "+\n";
-    std::cout << "\033[0m";
+    boardStream << "  +---+---+---+---+---+---+---+---+\n";
+    boardStream << "    a   b   c   d   e   f   g   h\n";
+    std::cout << boardStream.str();
 }
 
 void Display::gotoXY(short x, short y) {

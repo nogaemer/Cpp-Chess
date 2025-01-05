@@ -10,8 +10,5 @@ int main() {
     Display display;
     display.start();
 
-    std::cout << "Press any key to enter..." << std::endl;
-    std::cin.get();
-
     return 0;
 }

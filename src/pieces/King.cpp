@@ -30,8 +30,17 @@ bool King::hasMoved() {
 
 void King::move(Square* square, const bool realMove) {
     this->square->removePiece();
+    for (const auto attacking_piece : *this->square->getAttackingPieces()) {
+        attacking_piece->updateLegalMoves(true);
+    }
+
     square->setPiece(this);
     this->square = square;
+    for (const auto attacking_piece : *square->getAttackingPieces()) {
+        attacking_piece->updateLegalMoves(true);
+    }
+
+    updateLegalMoves(true);
 
     moved = realMove ? true : moved;
 }
@@ -46,10 +55,18 @@ std::vector<Square *>* King::getLegalMoves() {
 }
 
 void King::updateLegalMoves(bool checkForCheck) {
+    for (auto legal_move : legalMoves) {
+        legal_move->removeAttackingPiece(this);
+    }
+
     std::vector<Pair> moves = {{1, 0}, {1, 1}, {1, -1}, {0, 1}, {0, -1}, {-1, 0}, {-1, 1}, {-1, -1}};
 
     auto squares = BoardManager::getSquaresByOffset(this, moves);
     setLegalMoves(BoardManager::validateMoves(this, squares, color, checkForCheck));
+
+    for (auto legal_move : legalMoves) {
+        legal_move->addAttackingPiece(this);
+    }
 }
 
 void King::updatePinnedPairs() {

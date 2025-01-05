@@ -1,18 +1,20 @@
 //
-// Created by Noah Schwenold on 1/4/2025.
+// Created by Noah Schwenold on 1/5/2025.
 //
 
-#ifndef ROOK_H
-#define ROOK_H
+// Queen.h
+
+#ifndef QUEEN_H
+#define QUEEN_H
 
 #include <string>
 
 #include "Piece.h"
 
-class Rook final : public Piece {
+class Queen final : public Piece {
 public:
-    ~Rook() override;
-    Rook(PieceType type, Color color, Square* square);
+    ~Queen() override;
+    Queen(PieceType type, Color color, Square* square);
 
     Color getColor() override;
     PieceType getType() override;
@@ -25,7 +27,7 @@ public:
     std::vector<Square *>* getLegalMoves() override;
     void updateLegalMoves(bool checkForCheck) override;
 
-    std::string shortName() override {return "R";}
+    std::string shortName() override {return "Q";}
 
 private:
     PieceType type;
@@ -37,4 +39,4 @@ private:
     std::vector<Square*> legalMoves;
 };
 
-#endif //ROOK_H
+#endif //QUEEN_H

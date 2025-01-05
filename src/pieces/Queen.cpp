@@ -1,34 +1,33 @@
 //
-// Created by Noah Schwenold on 1/3/2025.
+// Created by Noah Schwenold on 1/5/2025.
 //
 
-#include "../pieces/Rook.h"
-
+#include "Queen.h"
 #include "../board/BoardManager.h"
 
-Rook::~Rook() = default;
+Queen::~Queen() = default;
 
-Rook::Rook(const PieceType type, const Color color, Square* square) : type(type), color(color), square(square) {
+Queen::Queen(PieceType type, Color color, Square* square) : type(type), color(color), square(square) {
     square->setPiece(this);
 }
 
-Color Rook::getColor() {
+Color Queen::getColor() {
     return color;
 }
 
-PieceType Rook::getType() {
+PieceType Queen::getType() {
     return type;
 }
 
-Square * Rook::getSquare() {
+Square* Queen::getSquare() {
     return square;
 }
 
-bool Rook::hasMoved() {
+bool Queen::hasMoved() {
     return moved;
 }
 
-void Rook::move(Square* square, bool realMove) {
+void Queen::move(Square* square, bool realMove) {
     this->square->removePiece();
     for (const auto attacking_piece : *this->square->getAttackingPieces()) {
         attacking_piece->updateLegalMoves(true);
@@ -45,15 +44,15 @@ void Rook::move(Square* square, bool realMove) {
     moved = realMove ? true : moved;
 }
 
-void Rook::setLegalMoves(std::vector<Square *> moves) {
+void Queen::setLegalMoves(std::vector<Square *> moves) {
     legalMoves = std::move(moves);
 }
 
-std::vector<Square *>* Rook::getLegalMoves() {
+std::vector<Square *>* Queen::getLegalMoves() {
     return &legalMoves;
 }
 
-void Rook::updateLegalMoves(bool checkForCheck) {
+void Queen::updateLegalMoves(bool checkForCheck) {
     for (auto legal_move : legalMoves) {
         legal_move->removeAttackingPiece(this);
     }
@@ -64,11 +63,22 @@ void Rook::updateLegalMoves(bool checkForCheck) {
     std::vector<Square*> rightSquares = BoardManager::getStraightSquares(this, true, false);
     std::vector<Square*> leftSquares = BoardManager::getStraightSquares(this, false, false);
 
+    // Get all diagonal squares in four directions
+    std::vector<Square*> upRightSquares = BoardManager::getDiagonalSquares(this, true, true);
+    std::vector<Square*> upLeftSquares = BoardManager::getDiagonalSquares(this, true, false);
+    std::vector<Square*> downRightSquares = BoardManager::getDiagonalSquares(this, false, true);
+    std::vector<Square*> downLeftSquares = BoardManager::getDiagonalSquares(this, false, false);
+
     // Traverse squares until a piece is found
     std::vector<Square*> upMoves = BoardManager::traverseSquaresUntilPiece(upSquares, color);
     std::vector<Square*> downMoves = BoardManager::traverseSquaresUntilPiece(downSquares, color);
     std::vector<Square*> rightMoves = BoardManager::traverseSquaresUntilPiece(rightSquares, color);
     std::vector<Square*> leftMoves = BoardManager::traverseSquaresUntilPiece(leftSquares, color);
+
+    std::vector<Square*> upRightMoves = BoardManager::traverseSquaresUntilPiece(upRightSquares, color);
+    std::vector<Square*> upLeftMoves = BoardManager::traverseSquaresUntilPiece(upLeftSquares, color);
+    std::vector<Square*> downRightMoves = BoardManager::traverseSquaresUntilPiece(downRightSquares, color);
+    std::vector<Square*> downLeftMoves = BoardManager::traverseSquaresUntilPiece(downLeftSquares, color);
 
     // Combine all potential moves
     std::vector<Square*> potentialMoves;
@@ -76,6 +86,10 @@ void Rook::updateLegalMoves(bool checkForCheck) {
     potentialMoves.insert(potentialMoves.end(), downMoves.begin(), downMoves.end());
     potentialMoves.insert(potentialMoves.end(), rightMoves.begin(), rightMoves.end());
     potentialMoves.insert(potentialMoves.end(), leftMoves.begin(), leftMoves.end());
+    potentialMoves.insert(potentialMoves.end(), upRightMoves.begin(), upRightMoves.end());
+    potentialMoves.insert(potentialMoves.end(), upLeftMoves.begin(), upLeftMoves.end());
+    potentialMoves.insert(potentialMoves.end(), downRightMoves.begin(), downRightMoves.end());
+    potentialMoves.insert(potentialMoves.end(), downLeftMoves.begin(), downLeftMoves.end());
 
     setLegalMoves(BoardManager::validateMoves(this, potentialMoves, color, checkForCheck));
 

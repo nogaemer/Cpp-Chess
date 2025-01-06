@@ -19,9 +19,10 @@ public:
     Color getColor() override;
     PieceType getType() override;
     Square* getSquare() override;
+    void setSquare(Square* square) override;
 
     bool hasMoved() override;
-    void move(Square* square, bool realMove) override;
+    void setMoved(bool moved) override;
 
     void setLegalMoves(std::vector<Square *> moves) override;
     std::vector<Square *>* getLegalMoves() override;

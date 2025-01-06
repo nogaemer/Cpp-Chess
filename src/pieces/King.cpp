@@ -8,9 +8,10 @@
 
 King::~King() = default;
 
-King::King(const PieceType type, const Color color, Square* square) : type(type), color(color), square(square) {
+King::King(const PieceType type, Color color, Square* square) : type(type), color(color), square(square) {
     square->setPiece(this);
 }
+
 
 Color King::getColor() {
     return color;
@@ -24,26 +25,16 @@ Square * King::getSquare() {
     return square;
 }
 
+void King::setSquare(Square *square) {
+    this->square = square;
+}
+
 bool King::hasMoved() {
     return moved;
 }
 
-void King::move(Square* square, const bool realMove) {
-    this->square->removePiece();
-    if (square->getPiece() != nullptr) {
-        square->getPiece()->deletePiece();
-    }
-
-
-    Square* oldSquare = this->square;
-    square->setPiece(this);
-    this->square = square;
-
-    MoveUpdater::updateAll(oldSquare, this);
-
-    updateLegalMoves(false);
-
-    moved = realMove ? true : moved;
+void King::setMoved(const bool moved) {
+    this->moved = moved;
 }
 
 void King::setLegalMoves(std::vector<Square *> moves) {

@@ -78,7 +78,7 @@ void Display::start() {
                     maxXCursorPosition = 8;
                 } else {
                     const Square* square = BoardManager::getSquare({yCursorPosition, xCursorPosition});
-                    if (square->hasPiece()) {
+                    if (square->hasPiece() && !square->getPiece()->getLegalMoves()->empty()) {
                         pieceSelected = true;
                         selectedPiece = square->getPiece();
                         xCursorPosition = 0;
@@ -127,16 +127,19 @@ void Display::drawBoard() const {
 
 
             if (pieceSelected) {
+                // Highlight selected piece
                 if (this->selectedPiece->getSquare() == square) {
                     bg = RGB{0,187,119};
                     fg = RGB{0, 0, 0};
                 }
 
+                // Highlight legal moves
                 if (isLegalMoveSquare) {
                     bg = RGB{255,116,108};
                     fg = RGB{0, 0, 0};
                 }
 
+                // Highlight selected move
                 if (this->selectedPiece->getLegalMoves()->at(*selectedMove) == square) {
                     bg = RGB{192,70,87};
                     fg = RGB{0, 0, 0};

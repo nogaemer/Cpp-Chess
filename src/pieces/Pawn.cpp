@@ -11,6 +11,7 @@ Pawn::Pawn(PieceType type, Color color, Square* square) : type(type), color(colo
     square->setPiece(this);
 }
 
+
 Color Pawn::getColor() {
     return color;
 }
@@ -23,24 +24,16 @@ Square* Pawn::getSquare() {
     return square;
 }
 
+void Pawn::setSquare(Square *square) {
+    this->square = square;
+}
+
 bool Pawn::hasMoved() {
     return moved;
 }
 
-void Pawn::move(Square* square, bool realMove) {
-    this->square->removePiece();
-    if (square->getPiece() != nullptr) {
-        square->getPiece()->deletePiece();
-    }
-
-    Square* oldSquare = this->square;
-    square->setPiece(this);
-    this->square = square;
-
-    moved = realMove ? true : moved;
-
-    MoveUpdater::updateAll(oldSquare, this);
-    updateLegalMoves(true);
+void Pawn::setMoved(const bool moved) {
+    this->moved = moved;
 }
 
 void Pawn::setLegalMoves(std::vector<Square *> moves) {

@@ -8,7 +8,7 @@
 
 Rook::~Rook() = default;
 
-Rook::Rook(const PieceType type, const Color color, Square* square) : type(type), color(color), square(square) {
+Rook::Rook(const PieceType type, Color color, Square* square): type(type), color(color), square(square) {
     square->setPiece(this);
 }
 
@@ -24,25 +24,16 @@ Square * Rook::getSquare() {
     return square;
 }
 
+void Rook::setSquare(Square *square) {
+    this->square = square;
+}
+
 bool Rook::hasMoved() {
     return moved;
 }
 
-void Rook::move(Square* square, bool realMove) {
-    this->square->removePiece();
-    if (square->getPiece() != nullptr) {
-        square->getPiece()->deletePiece();
-    }
-
-    Square* oldSquare = this->square;
-    square->setPiece(this);
-    this->square = square;
-
-    MoveUpdater::updateAll(oldSquare, this);
-
-    updateLegalMoves(true);
-
-    moved = realMove ? true : moved;
+void Rook::setMoved(const bool moved) {
+    this->moved = moved;
 }
 
 void Rook::setLegalMoves(std::vector<Square *> moves) {

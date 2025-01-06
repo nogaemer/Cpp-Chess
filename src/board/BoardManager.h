@@ -56,9 +56,9 @@ private:
     static std::vector<std::unique_ptr<Piece>> whitePieces;
     static std::vector<std::unique_ptr<Piece>> blackPieces;
 
-    static bool isMovePuttingKingInCheck(Piece* piece, Square* square, King* king);
-    static bool areCollinear(Piece* piece, Square* square, King* king);
-    static bool isAttackingPieceInMiddleOfKingAndPinnedPiece(Piece* piece, Square* square, King* king);
+    static bool isMovePuttingKingInCheck(Piece* piece, const Square* square, King* king);
+    static bool areCollinear(Piece* piece, const Square* square, King* king);
+    static bool isAttackingPieceInMiddleOfKingAndPinnedPiece(Piece* piece, const Square* square, King* king);
 };
 
 #endif //BOARD_MANAGER_H

@@ -8,9 +8,10 @@
 
 Knight::~Knight() = default;
 
-Knight::Knight(const PieceType type, const Color color, Square* square) : type(type), color(color), square(square) {
+Knight::Knight(const PieceType type, Color color, Square* square) : type(type), color(color), square(square) {
     square->setPiece(this);
 }
+
 
 Color Knight::getColor() {
     return color;
@@ -24,26 +25,16 @@ Square * Knight::getSquare() {
     return square;
 }
 
+void Knight::setSquare(Square *square) {
+    this->square = square;
+}
+
 bool Knight::hasMoved() {
     return moved;
 }
 
-void Knight::move(Square* square, const bool realMove) {
-    this->square->removePiece();
-    if (square->getPiece() != nullptr) {
-        square->getPiece()->deletePiece();
-    }
-
-
-    Square* oldSquare = this->square;
-    square->setPiece(this);
-    this->square = square;
-
-    MoveUpdater::updateAll(oldSquare, this);
-
-    updateLegalMoves(true);
-
-    moved = realMove ? true : moved;
+void Knight::setMoved(const bool moved) {
+    this->moved = moved;
 }
 
 void Knight::setLegalMoves(std::vector<Square *> moves) {

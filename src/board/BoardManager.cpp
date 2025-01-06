@@ -14,22 +14,30 @@
 #include "../pieces/Queen.h"
 #include "../pieces/Rook.h"
 
+/**
+ * @class BoardManager
+ * @brief Manages the chess board and pieces.
+ */
 std::unordered_map<Pair, std::unique_ptr<Square>> BoardManager::board {};
 std::vector<std::unique_ptr<Piece>> BoardManager::whitePieces {};
 std::vector<std::unique_ptr<Piece>> BoardManager::blackPieces {};
 King* BoardManager::whiteKing = nullptr;
 King* BoardManager::blackKing = nullptr;
 
+/**
+ * @brief Default constructor for BoardManager.
+ */
 BoardManager::BoardManager() = default;
 
+/**
+ * @brief Creates the chess board and initializes the pieces.
+ */
 void BoardManager::createChessBoard() {
     // Create the squares
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-
             Color color = (i + j) % 2 == 0 ? WHITE : BLACK;
             Pair pair = {i, j};
-
             board.insert(std::make_pair(pair, std::make_unique<Square>(i, j, nullptr, color)));
         }
     }
@@ -72,14 +80,24 @@ void BoardManager::createChessBoard() {
     }
 
     blackKing->updateLegalMoves(false);
-
     whiteKing->updateLegalMoves(false);
 }
 
+/**
+ * @brief Gets the square at the specified position.
+ * @param pair The position of the square.
+ * @return Pointer to the square at the specified position.
+ */
 Square * BoardManager::getSquare(const Pair &pair) {
     return board.at(pair).get();
 }
 
+/**
+ * @brief Gets the piece of the specified type and color.
+ * @param type The type of the piece.
+ * @param color The color of the piece.
+ * @return Pointer to the piece of the specified type and color.
+ */
 Piece * BoardManager::getPiece(const PieceType type, const Color color) {
     if (color == WHITE) {
         for (const auto& piece : whitePieces) {
@@ -97,10 +115,22 @@ Piece * BoardManager::getPiece(const PieceType type, const Color color) {
     return nullptr;
 }
 
+/**
+ * @brief Gets the position by applying an offset to a given position.
+ * @param pair The original position.
+ * @param offset The offset to apply.
+ * @return The new position after applying the offset.
+ */
 Pair BoardManager::getPositionByOffset(const Pair &pair, const Pair &offset) {
     return {pair.row + offset.row, pair.column + offset.column};
 }
 
+/**
+ * @brief Gets the squares by applying a list of offsets to a piece's position.
+ * @param piece The piece whose position is used as the base.
+ * @param offsets The list of offsets to apply.
+ * @return A vector of pointers to the squares at the new positions.
+ */
 std::vector<Square*> BoardManager::getSquaresByOffset(Piece* piece, const std::vector<Pair> &offsets) {
     std::vector<Square*> squares {};
 
@@ -116,14 +146,32 @@ std::vector<Square*> BoardManager::getSquaresByOffset(Piece* piece, const std::v
     return squares;
 }
 
+/**
+ * @brief Checks if a position is on the board.
+ * @param pair The position to check.
+ * @return True if the position is on the board, false otherwise.
+ */
 bool BoardManager::isOnBoard(const Pair &pair) {
     return (pair.row >= 0 && pair.row < 8 && pair.column >= 0 && pair.column < 8);
 }
 
+/**
+ * @brief Gets the king of the specified color.
+ * @param color The color of the king.
+ * @return Pointer to the king of the specified color.
+ */
 King* BoardManager::getKing(const Color color) {
     return color == WHITE ? whiteKing : blackKing;
 }
 
+/**
+ * @brief Checks if a move removes a check on the king.
+ * @param piece The piece to move.
+ * @param square The square to move the piece to.
+ * @param king The king to check for check removal.
+ * @param color The color of the piece.
+ * @return True if the move removes the check, false otherwise.
+ */
 bool BoardManager::doesMoveRemoveCheck(Piece *piece, Square *square, King *king, Color color) {
     std::vector<Piece*>* attackingPieces = king->getSquare()->getAttackingPieces(color == WHITE ? BLACK : WHITE);
 
@@ -149,22 +197,34 @@ bool BoardManager::doesMoveRemoveCheck(Piece *piece, Square *square, King *king,
     return false;
 }
 
+/**
+ * @brief Validates the possible moves for a piece.
+ * @param piece The piece to validate moves for.
+ * @param squares The possible squares to move to.
+ * @param color The color of the piece.
+ * @param checkForCheck Whether to check if the move puts the king in check.
+ * @return A vector of pointers to the valid squares the piece can move to.
+ */
 std::vector<Square*> BoardManager::validateMoves(Piece* piece, std::vector<Square*> &squares, Color color, bool checkForCheck) {
     std::vector<Square*> movableSquares {};
     King* king = getKing(color);
 
     for (auto& square : squares) {
-
-        //Check if the square is occupied by a piece of the same color
+        // Check if the square is occupied by a piece of the same color
         if (square == nullptr) continue;
         if (square->hasPiece() && square->getPiece()->getColor() == color) continue;
 
+        // Check if the move puts the king in check
+        if (piece->getType() == PieceType::KING) {
+            if (!square->getAttackingPieces(color == WHITE ? BLACK : WHITE)->empty()) continue;
+        }
 
         // If the king is not in check, we need to check if the move puts the king in check
         if (king->isPinned(piece) && checkForCheck) {
             if (isMovePuttingKingInCheck(piece, square, king)) continue;
         }
 
+        // If the king is in check, we need to check if the move removes the check
         if (!king->getSquare()->getAttackingPieces()->empty() && !doesMoveRemoveCheck(piece, square, king, color)) {
             continue;
         }
@@ -174,7 +234,14 @@ std::vector<Square*> BoardManager::validateMoves(Piece* piece, std::vector<Squar
     return movableSquares;
 }
 
-bool BoardManager::isMovePuttingKingInCheck(Piece* piece, Square* square, King* king) {
+/**
+ * @brief Checks if a move puts the king in check.
+ * @param piece The piece to move.
+ * @param square The square to move the piece to.
+ * @param king The king to check for check.
+ * @return True if the move puts the king in check, false otherwise.
+ */
+bool BoardManager::isMovePuttingKingInCheck(Piece* piece, const Square* square, King* king) {
     Piece *attackingPiece = king->getPinningPiece(piece);
 
     if (attackingPiece == nullptr) return true;
@@ -187,20 +254,34 @@ bool BoardManager::isMovePuttingKingInCheck(Piece* piece, Square* square, King* 
     return true;
 }
 
-bool BoardManager::isAttackingPieceInMiddleOfKingAndPinnedPiece(Piece* piece, Square* square, King* king) {
+/**
+ * @brief Checks if an attacking piece is in the middle of the king and a pinned piece.
+ * @param piece The attacking piece.
+ * @param square The square to move the pinned piece to.
+ * @param king The king to check for alignment.
+ * @return True if the attacking piece is in the middle, false otherwise.
+ */
+bool BoardManager::isAttackingPieceInMiddleOfKingAndPinnedPiece(Piece* piece, const Square* square, King* king) {
     auto dist = [](const Square* s1, const Square* s2) {
         return std::hypot(s2->getRow() - s1->getRow(), s2->getColumn() - s1->getColumn());
     };
 
-    double kingToSquare = dist(king->getSquare(), square);
-    double squareToPiece = dist(square, piece->getSquare());
-    double kingToPiece = dist(king->getSquare(), piece->getSquare());
-    const double epsilon = 1e-9;
+    const double kingToSquare = dist(king->getSquare(), square);
+    const double squareToPiece = dist(square, piece->getSquare());
+    const double kingToPiece = dist(king->getSquare(), piece->getSquare());
+    constexpr double epsilon = 1e-9;
 
     return std::abs(kingToSquare + squareToPiece - kingToPiece) < epsilon;
 }
 
-bool BoardManager::areCollinear(Piece* piece, Square* square, King* king) {
+/**
+ * @brief Checks if three pieces are collinear.
+ * @param piece The first piece.
+ * @param square The square to move the piece to.
+ * @param king The king to check for alignment.
+ * @return True if the pieces are collinear, false otherwise.
+ */
+bool BoardManager::areCollinear(Piece* piece, const Square* square, King* king) {
     const int x1 = king->getSquare()->getRow();
     const int y1 = king->getSquare()->getColumn();
     const int x2 = square->getRow();
@@ -211,15 +292,20 @@ bool BoardManager::areCollinear(Piece* piece, Square* square, King* king) {
     return (area == 0);
 }
 
-std::pair<Piece *, Piece *> BoardManager::
-checkForPinedPiece(const std::vector<Square *> &squares, const Color color) {
+/**
+ * @brief Checks for a pinned piece in a list of squares.
+ * @param squares The list of squares to check.
+ * @param color The color of the pieces to check.
+ * @return A pair of pointers to the pinned piece and the pinning piece.
+ */
+std::pair<Piece *, Piece *> BoardManager::checkForPinedPiece(const std::vector<Square *> &squares, const Color color) {
     Piece* pinedPiece = nullptr;
     Piece* pinningPiece = nullptr;
 
     for (auto& square : squares) {
         if (!square->hasPiece()) continue;
 
-        //check if next piece has a different color
+        // Check if next piece has a different color
         if (square->getPiece()->getColor() == color) {
             if (pinedPiece == nullptr) {
                 pinedPiece = square->getPiece();
@@ -249,18 +335,19 @@ checkForPinedPiece(const std::vector<Square *> &squares, const Color color) {
     return {nullptr, nullptr};
 }
 
+/**
+ * @brief Traverses squares until a piece is found.
+ * @param squares The list of squares to traverse.
+ * @param color The color of the pieces to check.
+ * @return A vector of pointers to the traversed squares.
+ */
 std::vector<Square *> BoardManager::traverseSquaresUntilPiece(const std::vector<Square *> &squares, Color color) {
     std::vector<Square*> traversedSquares;
 
     for (Square* square : squares) {
         if (square->hasPiece()) {
-            // if (square->getPiece()->getColor() == color) {
-            //     return traversedSquares;
-            // }
-
             traversedSquares.push_back(square);
             return traversedSquares;
-
         }
         traversedSquares.push_back(square);
     }
@@ -268,6 +355,13 @@ std::vector<Square *> BoardManager::traverseSquaresUntilPiece(const std::vector<
     return traversedSquares;
 }
 
+/**
+ * @brief Gets the diagonal squares from a piece's position.
+ * @param piece The piece whose position is used as the base.
+ * @param up Whether to move up.
+ * @param right Whether to move right.
+ * @return A vector of pointers to the diagonal squares.
+ */
 std::vector<Square *> BoardManager::getDiagonalSquares(Piece* piece, bool up, bool right) {
     std::vector<Square*> squares {};
 
@@ -283,6 +377,13 @@ std::vector<Square *> BoardManager::getDiagonalSquares(Piece* piece, bool up, bo
     return squares;
 }
 
+/**
+ * @brief Gets the straight squares from a piece's position.
+ * @param piece The piece whose position is used as the base.
+ * @param positivDirecion Whether to move in the positive direction.
+ * @param vertical Whether to move vertically.
+ * @return A vector of pointers to the straight squares.
+ */
 std::vector<Square *> BoardManager::getStraightSquares(Piece* piece, bool positivDirecion, bool vertical) {
     std::vector<Square*> squares {};
 
@@ -301,6 +402,10 @@ std::vector<Square *> BoardManager::getStraightSquares(Piece* piece, bool positi
     return squares;
 }
 
+/**
+ * @brief Gets the white pieces on the board.
+ * @return A vector of pointers to the white pieces.
+ */
 std::vector<Piece*> BoardManager::getWhitePieces() {
     static std::vector<Piece*> whitePiecePtrs;
     whitePiecePtrs.clear();
@@ -310,6 +415,10 @@ std::vector<Piece*> BoardManager::getWhitePieces() {
     return whitePiecePtrs;
 }
 
+/**
+ * @brief Gets the black pieces on the board.
+ * @return A vector of pointers to the black pieces.
+ */
 std::vector<Piece *> BoardManager::getBlackPieces() {
     static std::vector<Piece*> blackPiecePtrs;
     blackPiecePtrs.clear();
@@ -319,6 +428,10 @@ std::vector<Piece *> BoardManager::getBlackPieces() {
     return blackPiecePtrs;
 }
 
+/**
+ * @brief Removes a piece from the board.
+ * @param piece The piece to remove.
+ */
 void BoardManager::removePiece(Piece* piece) {
     if (piece->getColor() == WHITE) {
         auto it = std::ranges::find_if(whitePieces, [piece](const std::unique_ptr<Piece>& p) { return p.get() == piece; });
@@ -332,6 +445,3 @@ void BoardManager::removePiece(Piece* piece) {
         }
     }
 }
-
-
-

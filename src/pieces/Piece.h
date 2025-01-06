@@ -28,10 +28,13 @@ public:
     virtual PieceType getType() = 0;
     virtual Color getColor() = 0;
     virtual Square* getSquare() = 0;
+    virtual void setSquare(Square* square) = 0;
 
     virtual bool hasMoved() = 0;
-    virtual void move(Square* square, bool realMove) = 0;
-    void deletePiece();
+    virtual void setMoved(bool moved) = 0;
+
+    virtual void move(Square* square, bool realMove);
+    virtual void deletePiece();
 
     virtual void setLegalMoves(std::vector<Square*> moves) = 0;
     virtual std::vector<Square *>* getLegalMoves() = 0;

@@ -23,26 +23,16 @@ Square* Queen::getSquare() {
     return square;
 }
 
+void Queen::setSquare(Square *square) {
+    this->square = square;
+}
+
 bool Queen::hasMoved() {
     return moved;
 }
 
-void Queen::move(Square* square, bool realMove) {
-    this->square->removePiece();
-    if (square->getPiece() != nullptr) {
-        square->getPiece()->deletePiece();
-    }
-
-
-    Square* oldSquare = this->square;
-    square->setPiece(this);
-    this->square = square;
-
-    MoveUpdater::updateAll(oldSquare, this);
-
-    updateLegalMoves(true);
-
-    moved = realMove ? true : moved;
+void Queen::setMoved(const bool moved) {
+    this->moved = moved;
 }
 
 void Queen::setLegalMoves(std::vector<Square *> moves) {

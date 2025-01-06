@@ -12,6 +12,7 @@ Bishop::Bishop(PieceType type, Color color, Square* square) : type(type), color(
     square->setPiece(this);
 }
 
+
 Color Bishop::getColor() {
     return color;
 }
@@ -24,25 +25,16 @@ Square* Bishop::getSquare() {
     return square;
 }
 
+void Bishop::setSquare(Square *square) {
+    this->square = square;
+}
+
 bool Bishop::hasMoved() {
     return moved;
 }
 
-void Bishop::move(Square* square, bool realMove) {
-    this->square->removePiece();
-    if (square->getPiece() != nullptr) {
-        square->getPiece()->deletePiece();
-    }
-
-    Square* oldSquare = this->square;
-    square->setPiece(this);
-    this->square = square;
-
-    MoveUpdater::updateAll(oldSquare, this);
-
-    updateLegalMoves(true);
-
-    moved = realMove ? true : moved;
+void Bishop::setMoved(const bool moved) {
+    this->moved = moved;
 }
 
 void Bishop::setLegalMoves(std::vector<Square *> moves) {

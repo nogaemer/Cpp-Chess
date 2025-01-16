@@ -29,4 +29,9 @@ add_executable(Cpp_Chess src/main.cpp
         src/pieces/Pawn.h
         src/pieces/MoveUpdater.cpp
         src/pieces/MoveUpdater.h
-        src/pieces/Piece.cpp)
+        src/pieces/Piece.cpp
+        src/player/Player.h
+        src/player/Player.cpp
+        src/player/PlayerManager.cpp
+        src/player/PlayerManager.h
+)

@@ -32,6 +32,7 @@ public:
     static bool isOnBoard(const Pair& pair);
 
     static King* getKing(Color color);
+    static bool isCheckMate();
 
     static bool doesMoveRemoveCheck(Piece * piece, Square * square, King * king, Color color);
 

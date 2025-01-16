@@ -13,7 +13,9 @@
 #include "../pieces/Pawn.h"
 #include "../pieces/Queen.h"
 #include "../pieces/Rook.h"
+#include "../player/PlayerManager.h"
 
+class Player;
 /**
  * @class BoardManager
  * @brief Manages the chess board and pieces.
@@ -115,6 +117,8 @@ Piece * BoardManager::getPiece(const PieceType type, const Color color) {
     return nullptr;
 }
 
+
+
 /**
  * @brief Gets the position by applying an offset to a given position.
  * @param pair The original position.
@@ -162,6 +166,20 @@ bool BoardManager::isOnBoard(const Pair &pair) {
  */
 King* BoardManager::getKing(const Color color) {
     return color == WHITE ? whiteKing : blackKing;
+}
+
+bool BoardManager::isCheckMate() {
+    Player* player = PlayerManager::getCurrentPlayer();
+    King* king = getKing(player->getColor());
+    std::vector<Piece*> pieces = player->getColor() == WHITE ? getWhitePieces() : getBlackPieces();
+
+    if (king->getLegalMoves()->empty()) {
+        for (Piece* piece : pieces) {
+            if (piece->getLegalMoves()->empty()) continue;
+            return false;
+        }
+        return true;
+    }
 }
 
 /**
@@ -225,7 +243,7 @@ std::vector<Square*> BoardManager::validateMoves(Piece* piece, std::vector<Squar
         }
 
         // If the king is in check, we need to check if the move removes the check
-        if (!king->getSquare()->getAttackingPieces()->empty() && !doesMoveRemoveCheck(piece, square, king, color)) {
+        if (!king->getSquare()->getAttackingPieces(color == WHITE ? BLACK : WHITE)->empty() && !doesMoveRemoveCheck(piece, square, king, color)) {
             continue;
         }
 

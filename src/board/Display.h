@@ -29,6 +29,7 @@ private:
     int maxYCursorPosition = 8;
 
     void drawBoard() const;
+    void drawCheckMateScreen();
 
     void gotoXY(short x, short y);
 

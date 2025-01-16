@@ -11,6 +11,7 @@
 #include "Square.h"
 #include "BoardManager.h"
 #include "../pieces/Piece.h"
+#include "../player/PlayerManager.h"
 
 struct RGB {
     int r, g, b;
@@ -71,6 +72,8 @@ void Display::start() {
                 if (pieceSelected) {
                     Square* moveToSquare = selectedPiece->getLegalMoves()->at(*selectedMove);
                     selectedPiece->move(moveToSquare, true);
+                    PlayerManager::switchPlayers();
+                    if (BoardManager::isCheckMate()) drawCheckMateScreen();
 
                     pieceSelected = false;
                     xCursorPosition = moveToSquare->getColumn();
@@ -78,11 +81,16 @@ void Display::start() {
                     maxXCursorPosition = 8;
                 } else {
                     const Square* square = BoardManager::getSquare({yCursorPosition, xCursorPosition});
-                    if (square->hasPiece() && !square->getPiece()->getLegalMoves()->empty()) {
-                        pieceSelected = true;
-                        selectedPiece = square->getPiece();
-                        xCursorPosition = 0;
-                        maxXCursorPosition = selectedPiece->getLegalMoves()->size();
+
+                    if (square->hasPiece()) {
+                        if (PlayerManager::getCurrentPlayer()->getColor() == square->getPiece()->getColor()) {
+                            if (square->hasPiece() && !square->getPiece()->getLegalMoves()->empty()) {
+                                pieceSelected = true;
+                                selectedPiece = square->getPiece();
+                                xCursorPosition = 0;
+                                maxXCursorPosition = selectedPiece->getLegalMoves()->size();
+                            }
+                        }
                     }
                 }
             } else if (ch == 27) { // Escape key
@@ -104,7 +112,10 @@ void Display::drawBoard() const {
         selectedPiece = BoardManager::getSquare({yCursorPosition, xCursorPosition})->getPiece();
     }
 
-    std::vector<Square*> legalMoveSquares = selectedPiece != nullptr ? *selectedPiece->getLegalMoves() : std::vector<Square*>{};
+    std::vector<Square*> legalMoveSquares = std::vector<Square*>{};
+    if ( selectedPiece != nullptr && PlayerManager::getCurrentPlayer()->getColor() == selectedPiece->getColor()) {
+        legalMoveSquares = *selectedPiece->getLegalMoves();
+    }
 
     RGB bg;
     RGB fg;
@@ -140,6 +151,7 @@ void Display::drawBoard() const {
                 }
 
                 // Highlight selected move
+
                 if (this->selectedPiece->getLegalMoves()->at(*selectedMove) == square) {
                     bg = RGB{192,70,87};
                     fg = RGB{0, 0, 0};
@@ -178,6 +190,13 @@ void Display::drawBoard() const {
     boardStream << "  +---+---+---+---+---+---+---+---+\n";
     boardStream << "    a   b   c   d   e   f   g   h\n";
     std::cout << boardStream.str();
+}
+
+void Display::drawCheckMateScreen() {
+    std::cout << "Checkmate!";
+    std::cout << "Press any key to exit...";
+    _getch();
+    exit(0);
 }
 
 void Display::gotoXY(short x, short y) {

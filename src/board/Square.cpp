@@ -46,7 +46,7 @@ MoveUpdater * Square::getUpdater() const {
 }
 
 std::vector<Piece *> * Square::getAttackingPieces() {
-    std::vector<Piece*>* combinedAttackingPieces = new std::vector<Piece*>();
+    auto* combinedAttackingPieces = new std::vector<Piece*>();
     combinedAttackingPieces->insert(combinedAttackingPieces->end(), whiteAttackingPieces.begin(), whiteAttackingPieces.end());
     combinedAttackingPieces->insert(combinedAttackingPieces->end(), blackAttackingPieces.begin(), blackAttackingPieces.end());
     return combinedAttackingPieces;
@@ -101,7 +101,7 @@ void Square::removeAttackingPiece(Piece* piece) {
             BoardManager::getKing(WHITE)->updateLegalMoves(false);
         } else {
             coloredPieces = BoardManager::getBlackPieces();
-            BoardManager::getKing(WHITE)->updateLegalMoves(false);
+            BoardManager::getKing(BLACK)->updateLegalMoves(false);
         }
         for (const auto coloredPiece : coloredPieces) {
             coloredPiece->updateLegalMoves(true);

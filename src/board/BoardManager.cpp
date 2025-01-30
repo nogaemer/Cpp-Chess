@@ -56,7 +56,7 @@ void BoardManager::createChessBoard() {
     whitePieces.push_back(std::make_unique<Rook>(PieceType::ROOK, WHITE, getSquare({6, 5})));
     whitePieces.push_back(std::make_unique<Queen>(PieceType::QUEEN, WHITE, getSquare({0, 3})));
     for (int i = 0; i < 8; i++) {
-        if (i == 5) continue;
+        if (i == 4) continue;
         whitePieces.push_back(std::make_unique<Pawn>(PieceType::PAWN, WHITE, getSquare({1, i})));
     }
 
@@ -180,6 +180,7 @@ bool BoardManager::isCheckMate() {
         }
         return true;
     }
+    return false;
 }
 
 /**
@@ -233,10 +234,22 @@ std::vector<Square*> BoardManager::validateMoves(Piece* piece, std::vector<Squar
         if (square->hasPiece() && square->getPiece()->getColor() == color) continue;
 
         // Check if the move puts the king in check
+        bool squarePieceIsProtected = false;
         if (piece->getType() == PieceType::KING) {
             if (!square->getAttackingPieces(color == WHITE ? BLACK : WHITE)->empty()) continue;
-        }
+            if (!square->hasPiece()) goto continueValidatingMoves;
 
+            if (square->getPiece()->getColor() != color) {
+                for (auto piece : *square->getUpdater()->getRegisteredPieces()) {
+                    if (piece->getColor() != color) {
+                        squarePieceIsProtected = true;
+                    }
+                }
+            }
+        }
+        if (squarePieceIsProtected) continue;
+
+        continueValidatingMoves:
         // If the king is not in check, we need to check if the move puts the king in check
         if (king->isPinned(piece) && checkForCheck) {
             if (isMovePuttingKingInCheck(piece, square, king)) continue;
